@@ -1,0 +1,50 @@
+apiVersion: vpcresources.k8s.aws/v1beta1
+kind: SecurityGroupPolicy
+metadata:
+  name: netshoot-security-group-policy
+spec:
+  podSelector:
+    matchLabels:
+      app: netshoot-podsecuritygroup
+  securityGroups:
+    groupIds:
+      - sg-0351660a1c466d658 # your security group ID
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netshoot-podsecuritygroup
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: netshoot-podsecuritygroup
+  template:
+    metadata:
+      labels:
+        app: netshoot-podsecuritygroup
+    spec:
+      containers:
+      - name: netshoot
+        image: nicolaka/netshoot
+        command: ["tail"]
+        args: ["-f", "/dev/null"]
+        resources:
+          requests:
+            cpu: "1.0"
+            memory: "256Mi"
+          limits:
+            cpu: "1.0"
+            memory: "256Mi"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - netshoot-podsecuritygroup
+              topologyKey: kubernetes.io/hostname
