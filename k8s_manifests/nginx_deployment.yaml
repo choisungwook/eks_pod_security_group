@@ -18,6 +18,10 @@ spec:
           limits:
             memory: "64Mi"
             cpu: "100m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
         ports:
         - containerPort: 80
 ---
@@ -31,3 +35,24 @@ spec:
   ports:
   - port: 80
     targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+  - host: albtest.choilab.xyz # your domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx
+            port:
+              number: 80
