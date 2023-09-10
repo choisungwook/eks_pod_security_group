@@ -1,0 +1,38 @@
+apiVersion: vpcresources.k8s.aws/v1beta1
+kind: SecurityGroupPolicy
+metadata:
+  name: nginx-with-securitygroup
+spec:
+  podSelector:
+    matchLabels:
+      app: nginx-with-securitygroup
+  securityGroups:
+    groupIds:
+      - sg-0ea0d5a14912f2691 # your security group ID
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx-with-securitygroup
+  template:
+    metadata:
+      labels:
+        app: nginx-with-securitygroup
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        resources:
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+        ports:
+        - containerPort: 80
